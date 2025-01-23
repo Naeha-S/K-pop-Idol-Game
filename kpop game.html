@@ -1,0 +1,341 @@
+<html><head><base href="https://example.com">
+    <meta charset="UTF-8">
+    <title>K-Pop Idol & Song Guessing Game</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #6a11cb, #2575fc, #a18cd1, #fbc2eb);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+        .buttons {
+            margin: 20px 0;
+        }
+        .buttons button {
+            background: linear-gradient(45deg, #ff4081, #673ab7);
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: transform 0.3s, background 0.3s;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .buttons button:hover {
+            background: linear-gradient(45deg, #e91e63, #512da8);
+            transform: scale(1.05);
+        }
+        .game-area {
+            display: none;
+            margin-top: 20px;
+        }
+        .game-area.active {
+            display: block;
+        }
+        .question {
+            font-size: 2em;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #8e2de2, #4a00e0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .options button {
+            background: linear-gradient(45deg, #4caf50, #81c784);
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 15px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.3s, background 0.3s;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        .options button:hover {
+            background: linear-gradient(45deg, #388e3c, #2e7d32);
+            transform: scale(1.05);
+        }
+        .score {
+            margin-top: 20px;
+            font-size: 1.5em;
+            background: linear-gradient(90deg, #fbc2eb, #a6c1ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s infinite alternate;
+        }
+        @keyframes shimmer {
+            from { text-shadow: 0 0 5px #fbc2eb, 0 0 10px #a6c1ee; }
+            to { text-shadow: 0 0 20px #fbc2eb, 0 0 30px #a6c1ee; }
+        }
+        .end-screen {
+            display: none;
+            font-size: 2em;
+            margin-top: 20px;
+            animation: fadeIn 1s forwards;
+        }
+        .end-screen.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>K-Pop Guessing Game</h1>
+        <div class="buttons">
+            <button id="guessIdolBtn">Guess the Idol</button>
+            <button id="guessLyricsBtn">Guess the Song Lyrics</button>
+        </div>
+        <div class="game-area" id="idolGame">
+            <div class="question" id="idolQuestion">Which group is this K-Pop idol from?</div>
+            <div class="options" id="idolOptions">
+                <!-- Dynamically populated buttons -->
+            </div>
+        </div>
+        <div class="game-area" id="lyricsGame">
+            <div class="question" id="lyricsQuestion">Complete the song lyrics:</div>
+            <div class="options" id="lyricsOptions">
+                <!-- Dynamically populated buttons -->
+            </div>
+        </div>
+        <div class="score" id="score">Score: 0</div>
+        <div class="end-screen" id="endScreen">
+            Congratulations! You've completed all questions.<br>
+            Your final score is: <span id="finalScore">0</span>
+            <br>
+            <button id="restartBtn" style="margin-top:20px; padding:10px 20px; border:none; border-radius:10px; background:linear-gradient(45deg, #ff4081, #673ab7); color:#fff; cursor:pointer;">Restart Game</button>
+        </div>
+    </div>
+
+    <script>
+        const idols = [
+        { name: 'Bangchan', group: 'Stray Kids', fact: 'This idol is the leader of Stray Kids.' },
+        { name: 'Lisa', group: 'Blackpink', fact: 'This idol is known for her incredible dancing skills and being the main dancer of her group.' },
+        { name: 'Taehyung', group: 'BTS', fact: 'This idol is the vocalist of BTS and known for his deep voice.' },
+        { name: 'Hyunjin', group: 'Stray Kids', fact: 'This idol is known for his body control and visuals in Stray Kids.' },
+        { name: 'Jennie', group: 'Blackpink', fact: 'This idol is the first member of Blackpink to debut solo.' },
+        { name: 'Soobin', group: 'TXT', fact: 'This idol is the leader of TXT.' },
+        { name: 'Yves', group: 'STAYC', fact: 'This idol is known for her stunning visuals in STAYC.' },
+        { name: 'Nayeon', group: 'Twice', fact: 'This idol is the first member to perform first in Twice.' },
+        { name: 'Jungkook', group: 'BTS', fact: 'This idol is known as the Golden Maknae of BTS.' },
+        { name: 'Felix', group: 'Stray Kids', fact: 'This idol is known for his deep voice and duality in Stray Kids.' },
+	{ name: 'Lisa', group: 'BLACKPINK', fact: 'This idol is known for her incredible dance skills and being the main dancer of BLACKPINK.' },
+	{ name: 'Soyeon', group: '(G)I-DLE', fact: 'This idol is known for her leadership and exceptional rap skills in (G)I-DLE.' },
+	{ name: 'Taemin', group: 'SHINee', fact: 'This idol is known for his mesmerizing dance performances in SHINee.' },
+	{ name: 'Hwasa', group: 'MAMAMOO', fact: 'This idol is known for her unique voice and bold stage presence in MAMAMOO.' },
+	{ name: 'Hoshi', group: 'SEVENTEEN', fact: 'This idol is known for choreographing SEVENTEEN’s performances and is known as Horanghae.' },
+	{ name: 'Karina', group: 'aespa', fact: 'This idol is known for her stunning visuals and being the leader of aespa.' },
+	{ name: 'Solar', group: 'MAMAMOO', fact: 'This idol is known as the leader and main vocalist of MAMAMOO.' },
+	{ name: 'Kai', group: 'EXO', fact: 'This idol is known for his captivating dance performances in EXO.' },
+	{ name: 'San', group: 'ATEEZ', fact: 'This idol is known for his intense stage presence and sharp dance moves in ATEEZ.' },
+	{ name: 'Irene', group: 'Red Velvet', fact: 'This idol is known for her leadership and stunning visuals in Red Velvet.' },
+	{ name: 'Miyeon', group: '(G)I-DLE', fact: 'This idol is known for her angelic voice and being the main vocalist of (G)I-DLE.' },
+	{ name: 'Yeonjun', group: 'TXT', fact: 'This idol is known for his exceptional dance skills and being the oldest member of TXT.' },
+	{ name: 'Dawon', group: 'SF9', fact: 'This idol is known for his sense of humor and strong vocals in SF9.' },
+	{ name: 'Winter', group: 'aespa', fact: 'This idol is known for her clear vocals and charming visuals in aespa.' },
+	{ name: 'Wonwoo', group: 'SEVENTEEN', fact: 'This idol is known for his deep voice and thoughtful personality in SEVENTEEN.' },
+	{ name: 'Chaeryeong', group: 'ITZY', fact: 'This idol is known for her graceful dance skills and expressive performances in ITZY.' },
+	{ name: 'Taeyong', group: 'NCT', fact: 'This idol is known for his leadership and charismatic rap in NCT.' },
+	{ name: 'Yunjin', group: 'LE SSERAFIM', fact: 'This idol is known for her strong vocals and artistic flair in LE SSERAFIM.' },
+	{ name: 'Minhyuk', group: 'MONSTA X', fact: 'This idol is known for his bright energy and visuals in MONSTA X.' },
+	{ name: 'Jongho', group: 'ATEEZ', fact: 'This idol is known for his powerful high notes and strong vocals in ATEEZ.' },
+	{ name: 'Hanni', group: 'NewJeans', fact: 'This idol is known for her sweet voice and adorable charm in NewJeans.' }
+            // Add more idols here
+        ];
+
+        const lyrics = [
+        { lyric: 'Smooth like butter like a criminal undercover hot like summer when you making me sweat like that', song: 'Butter', artist: 'BTS' },
+        { lyric: 'Lovesick Girls, always looking for love', song: 'Lovesick Girls', artist: 'Blackpink' },
+        { lyric: 'Feel the night, hear my heart beat', song: 'Stay Gold', artist: 'STAYC' },
+        { lyric: 'We are bulletproof, more like stars we are shining', song: 'Bulletproof', artist: 'STAYC' },
+        { lyric: 'I want it, I got it, I want it, I got it', song: 'I Want It', artist: 'TooYoung the Better' },
+        { lyric: 'Running through the night', song: 'Run', artist: 'TXT' },
+        { lyric: 'Cheer up baby, let me see you smile', song: 'Cheer Up', artist: 'Twice' },
+	{ lyric: 'I’m the mafia, do it like a mafia', song: 'Mafia in the Morning', artist: 'ITZY' },
+	{ lyric: 'I got a good good, a good vibe', song: 'Good Vibes Only', artist: 'LE SSERAFIM' },
+	{ lyric: 'Make a move, love ain’t a science, don’t need no license', song: 'Scientist', artist: 'TWICE' },
+	{ lyric: 'We gonna get it, bom, bom, bom', song: 'Dalla Dalla', artist: 'ITZY' },
+	{ lyric: 'I’m fearless, a new b****, new crazy', song: 'FEARLESS', artist: 'LE SSERAFIM' },
+	{ lyric: 'I know I love you, say you love me, say you love me', song: '0X1=LOVESONG', artist: 'TXT' },
+	{ lyric: 'I’m the mafia, we do it like a mafia, ring ding ding', song: 'Mafia in the Morning', artist: 'ITZY' },
+	{ lyric: 'You got me looking for attention, you got me looking for attention', song: 'Attention', artist: 'NewJeans' },
+	{ lyric: 'I’m on the next level, I’ll destroy you in my way', song: 'Next Level', artist: 'aespa' },
+	{ lyric: 'This is my carnival, every day, every night, every moment', song: 'Wave', artist: 'ATEEZ' },
+	{ lyric: 'We don’t stop until the sun goes up, we keep on dancing', song: 'Make a Wish', artist: 'NCT U' },
+	{ lyric: 'You’re my celebrity, you are the star painted with my imagination', song: 'Celebrity', artist: 'IU' },
+	{ lyric: 'I can’t control my heart, it’s beating so loud for you', song: 'Love Dive', artist: 'IVE' },
+	{ lyric: 'I’m fearless, I won’t hide, I’ll stand tall and face it', song: 'FEARLESS', artist: 'LE SSERAFIM' },
+	{ lyric: 'I got the power, you know I got the fire inside me', song: 'Fire', artist: 'SEVENTEEN' },
+	{ lyric: 'I’m addicted to you, you’re like a sweet poison to me', song: 'Poison Love', artist: 'Red Velvet' },
+	{ lyric: 'Every day, every night, I’m feeling your love, it’s so right', song: 'Feel My Rhythm', artist: 'Red Velvet' },
+	{ lyric: 'We’re all in this together, let’s make it last forever', song: 'Together', artist: 'SF9' },
+	{ lyric: 'I’m a little monster, I’ll mess you up, I’ll destroy it all', song: 'Monster', artist: 'Red Velvet' },
+	{ lyric: 'Take my hand, don’t let go, we’ll run into the night', song: 'Runaway', artist: 'TXT' },
+
+
+            // Add more lyrics here
+        ];
+
+        let score = 0;
+        let idolQuestions = [];
+        let lyricsQuestions = [];
+
+        const guessIdolBtn = document.getElementById('guessIdolBtn');
+        const guessLyricsBtn = document.getElementById('guessLyricsBtn');
+        const idolGame = document.getElementById('idolGame');
+        const lyricsGame = document.getElementById('lyricsGame');
+        const scoreDisplay = document.getElementById('score');
+        const endScreen = document.getElementById('endScreen');
+        const finalScore = document.getElementById('finalScore');
+        const restartBtn = document.getElementById('restartBtn');
+
+        guessIdolBtn.addEventListener('click', () => {
+            if (idolQuestions.length === 0) {
+                idolQuestions = shuffleArray([...idols]);
+            }
+            endScreen.classList.remove('active');
+            idolGame.classList.add('active');
+            lyricsGame.classList.remove('active');
+            loadIdolQuestion();
+        });
+
+        guessLyricsBtn.addEventListener('click', () => {
+            if (lyricsQuestions.length === 0) {
+                lyricsQuestions = shuffleArray([...lyrics]);
+            }
+            endScreen.classList.remove('active');
+            lyricsGame.classList.add('active');
+            idolGame.classList.remove('active');
+            loadLyricsQuestion();
+        });
+
+        restartBtn.addEventListener('click', () => {
+            score = 0;
+            scoreDisplay.textContent = 'Score: 0';
+            idolQuestions = shuffleArray([...idols]);
+            lyricsQuestions = shuffleArray([...lyrics]);
+            endScreen.classList.remove('active');
+            idolGame.classList.remove('active');
+            lyricsGame.classList.remove('active');
+        });
+
+        function loadIdolQuestion() {
+            if (idolQuestions.length === 0) {
+                endGame();
+                return;
+            }
+            const question = document.getElementById('idolQuestion');
+            const options = document.getElementById('idolOptions');
+            options.innerHTML = '';
+            const currentIdol = idolQuestions.pop();
+            question.textContent = currentIdol.fact;
+
+            // Shuffle idols for options, ensuring no duplicates and excluding the current idol
+            const wrongIdols = idols.filter(idol => idol.name !== currentIdol.name);
+            const shuffledWrongIdols = shuffleArray(wrongIdols).slice(0, 3);
+
+            // Combine correct answer with wrong options
+            const optionsToShow = shuffleArray([...shuffledWrongIdols, currentIdol]);
+
+            optionsToShow.forEach(idolOption => {
+                const btn = document.createElement('button');
+                btn.textContent = idolOption.name;
+                btn.addEventListener('click', () => {
+                    if(idolOption.name === currentIdol.name){
+                        score++;
+                        btn.style.background = 'linear-gradient(45deg, #4caf50, #81c784)';
+                        setTimeout(() => { btn.style.background = ''; }, 500);
+                    } else {
+                        btn.style.background = 'linear-gradient(45deg, #f44336, #e57373)';
+                        setTimeout(() => { btn.style.background = ''; }, 500);
+                    }
+                    scoreDisplay.textContent = 'Score: ' + score;
+                    loadIdolQuestion();
+                });
+                options.appendChild(btn);
+            });
+        }
+
+        function loadLyricsQuestion() {
+            if (lyricsQuestions.length === 0) {
+                endGame();
+                return;
+            }
+            const question = document.getElementById('lyricsQuestion');
+            const options = document.getElementById('lyricsOptions');
+            options.innerHTML = '';
+            const currentLyric = lyricsQuestions.pop();
+            question.textContent = `Complete the song lyrics: "${currentLyric.lyric}"`;
+
+            // Shuffle lyrics for options, ensuring no duplicates and excluding the current song
+            const wrongLyrics = lyrics.filter(lyric => lyric.song !== currentLyric.song);
+            const shuffledWrongLyrics = shuffleArray(wrongLyrics).slice(0, 3);
+
+            // Combine correct answer with wrong options
+            const optionsToShow = shuffleArray([...shuffledWrongLyrics, currentLyric]);
+
+            optionsToShow.forEach(lyricOption => {
+                const btn = document.createElement('button');
+                btn.textContent = lyricOption.song;
+                btn.addEventListener('click', () => {
+                    if(lyricOption.song === currentLyric.song){
+                        score++;
+                        btn.style.background = 'linear-gradient(45deg, #4caf50, #81c784)';
+                        setTimeout(() => { btn.style.background = ''; }, 500);
+                    } else {
+                        btn.style.background = 'linear-gradient(45deg, #f44336, #e57373)';
+                        setTimeout(() => { btn.style.background = ''; }, 500);
+                    }
+                    scoreDisplay.textContent = 'Score: ' + score;
+                    loadLyricsQuestion();
+                });
+                options.appendChild(btn);
+            });
+        }
+
+        function endGame() {
+            idolGame.classList.remove('active');
+            lyricsGame.classList.remove('active');
+            endScreen.classList.add('active');
+            finalScore.textContent = score;
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+    </script>
+</body>
+</html>
